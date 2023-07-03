@@ -1,0 +1,16 @@
+{
+  "s3_bucket": "",
+  "docker_user": "test",
+  "docker_password": "test",
+  "environment": "local",
+  "AWS_PROFILE": "",
+  "variables_file": "",
+  "Parameteroverrides": {
+    "Environment": "local",
+    "ResourceOwner": "",
+    "CustomStackId": "",
+    "CustomDomainId": ""
+  },
+  "alt_port": "",
+  "alt_host": "localhost"
+}
