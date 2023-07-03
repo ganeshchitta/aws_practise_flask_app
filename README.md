@@ -1,2 +1,1 @@
-# aws_practise_flask_app
-testing flask
+# aws_flask_app
