@@ -1,0 +1,18 @@
+Parameters:
+  custom_stack_id:
+    Description: stack id of a user
+    Type: String
+    Default: "101"
+  environment:
+    Description: working environment
+    Type: String
+    Default: "local"
+
+
+Resources:
+  S3SourceBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName:
+        Fn:Sub: flask-sourcebucketflask-{custom_stack_id}-{environment}

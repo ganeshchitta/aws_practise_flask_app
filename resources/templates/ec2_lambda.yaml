@@ -1,0 +1,91 @@
+#Resources:
+#    MyEC2Instance:
+#      Type: AWS::EC2::Instance
+#      Properties:
+#        InstanceType: t2.micro
+#        Tags:
+#        - Key: Name
+#          Value: MyCFTFlaskInstance
+#        ImageId: ami-022d03f649d12a49d
+#        SecurityGroupIds:
+#          - sg-0a867cf8d554475dc
+#        UserData: !Base64
+#          Fn::Sub: |
+#            #!/bin/bash
+#            # install httpd
+#            yum update -y
+#            yum install -y httpd
+#            # start server
+#            systemctl start httpd
+#            systemctl enable httpd
+#            echo "<!DOCTYPE html><html><head><title>Sample Webpage</title></head><body><h1>Welcome to my webpage</h1></body></html>" >> /var/www/html/index.html
+#    # Lambda to copy flask app to ec2 instance
+#    CopyFlaskApp:
+#      Type: AWS::Lambda::Function
+#      Properties:
+#        FunctionName: copy-flaskapp-ec2
+#        Handler: copy_flask_to_ec2.lambda_handler
+#        Role: !GetAtt FlaskAppLambdaExecutionRole.Arn
+#        Runtime: python3.9
+#        Timeout: 60
+#        Layers:
+#          - ! Ref FlaskLambdaLayers
+#        Code:
+#          S3Bucket: sourcebucketflask
+#          S3Key: copy_flask_to_ec2.zip
+#        Environment:
+#          Variables:
+#            INSTANCE_ID: !Ref MyEC2Instance
+#        # trigger for lambda
+#        Events:
+#          S3Event:
+#            Type: S3
+#            Properties:
+#              Bucket: sourcebucketflask
+#              Events: s3:*:copy_flask_to_ec2.zip
+#    # lambda layers  for lambda
+#    FlaskLambdaLayers:
+#      Type: AWS::Lambda::LayerVersion
+#      Properties:
+#        Content:
+#          S3Bucket: "sourcebucketflask"
+#          S3Key: "flaskdependencies.zip"
+#        CompatibleRuntimes:
+#          - python3.9
+#        Description: 'My flask Layer2'
+#        LayerName: 'my-flask-python-layer2'
+#    # Lambda role for permisssions
+#    FlaskAppLambdaExecutionRole:
+#      Type: AWS::IAM::Role
+#      Properties:
+#        RoleName: flask-ec2-access
+#        AssumeRolePolicyDocument:
+#          Version: "2012-10-17"
+#          Statement:
+#            - Effect: Allow
+#              Principal:
+#                Service: lambda.amazonaws.com
+#              Action:
+#                - sts:AssumeRole
+#        Path: "/"
+#        Policies:
+#          - PolicyName: S3EC2ReadWriteAccess
+#            PolicyDocument:
+#              Version: "2012-10-17"
+#              Statement:
+#                - Effect: Allow
+#                  Action:
+#                    - s3:*
+#                    - ec2:*
+#                    - "logs:CreateLogGroup"
+#                    - "logs:CreateLogStream"
+#                    - "logs:PutLogEvents"
+#                  Resource:
+#                    - arn:aws:s3:::sourcebucketflask/*
+#                    - arn:aws:ec2:::*
+#                    - "arn:aws:logs:*:*:*"
+#
+#Outputs:
+#  InstancePublicIp:
+#    Description: The public IP address of the EC2 instance
+#    Value: !GetAtt MyEC2Instance.PublicIp

@@ -1,6 +1,0 @@
-Resources:
-  S3SourceBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    Properties:
-      BucketName: sourcebucketflask
