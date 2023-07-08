@@ -9,6 +9,7 @@ __pycache__/
 .Python
 sam_deploy_parameters.json
 flask-lambda-copy-to-dynamodb.zip
+flask-dependencies-lambda-layer.zip
 flask-dependencies-lambda-layer
 build/
 copytodynamodbcode.zip

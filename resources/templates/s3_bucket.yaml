@@ -1,5 +1,5 @@
 Parameters:
-  custom_stack_id:
+  customstackid:
     Description: stack id of a user
     Type: String
     Default: "101"
@@ -15,4 +15,4 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       BucketName:
-        Fn:Sub: flask-sourcebucketflask-{custom_stack_id}-{environment}
+        !Sub flask-sourcebucketflask-${customstackid}-${environment}

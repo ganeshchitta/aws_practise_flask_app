@@ -1,6 +1,7 @@
 import zipfile
 import os
 
+print(os.getcwd())
 os.chdir("lambdas/")
 
 def create_zip(filename, zipname):

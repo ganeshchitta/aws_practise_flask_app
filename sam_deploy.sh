@@ -1,28 +1,28 @@
 #!/bin/bash
 # check sam deploy parameters
-if [! -f sam_deploy_parameters.json ]; then
+if [ ! -f sam_deploy_parameters.json ]; then
   echo "missing parameters"
   exit 1
 fi
 environment=$(jq -r '.environment' sam_deploy_parameters.json)
-custom_stack_id=$(jq -r '.ParameterOverrides.CustomStackId' sam_deploy_parameters.json)
-custom_domain_id=$(jq -r '.ParameterOverrides.CustomDomainId' sam_deploy_parameters.json)
+customstackid=$(jq -r '.Parameteroverrides.CustomStackId' sam_deploy_parameters.json)
+custom_domain_id=$(jq -r '.Parameteroverrides.CustomDomainId' sam_deploy_parameters.json)
 ## zip a lambda file
 cd resources
 # create s3 bucket stack
-sam deploy --template-file templates/s3_bucket.yaml --stack-name flask-source-s3-bucket-${custom_stack_id}-${environment} --parameter-overrides custom_stack_id=${custom_stack_id} environment=${environment} --capabilities CAPABILITY_NAMED_IAM
+sam deploy --template-file templates/s3_bucket.yaml --stack-name flask-source-s3-bucket-${customstackid}-${environment} --parameter-overrides "customstackid=${customstackid} environment=${environment}" --capabilities CAPABILITY_NAMED_IAM
 # created dependencies layers for lambda
 pip install -r lambdas/requirements.txt -t lambdas/build/.
 python lambdas/zip_given_lambda.py
 #
 ## upload lambda python code to s3
-aws s3 cp lambdas/flask-lambda-copy-to-dynamodb.zip   s3://flask-sourcebucketflask-${custom_stack_id}-${environment}/
+aws s3 cp lambdas/flask-lambda-copy-to-dynamodb.zip   s3://flask-sourcebucketflask-${customstackid}-${environment}/
 ## upload dependencies as layers to s3
-#aws s3 cp dependencies.zip s3://flask-sourcebucketflask-${custom_stack_id}-${environment}/
-aws s3 cp lambdas/flask-dependencies-lambda-layer.zip s3://flask-sourcebucketflask-${custom_stack_id}-${environment}/
+#aws s3 cp dependencies.zip s3://flask-sourcebucketflask-${customstackid}-${environment}/
+aws s3 cp lambdas/flask-dependencies-lambda-layer.zip s3://flask-sourcebucketflask-${customstackid}-${environment}/
 
-#sam deploy --template-file templates/ec2_lambda.yaml --stack-name flask-source-ec2-lambda-${custom_stack_id}-${environment} --capabilities CAPABILITY_NAMED_IAM
-sam deploy --template-file templates/resources.yaml --stack-name flask-copy-jsondata-to-dynamodb-${custom_stack_id}-${environment} --parameter-overrides custom_stack_id=${custom_stack_id} environment=${environment} --capabilities CAPABILITY_NAMED_IAM
+#sam deploy --template-file templates/ec2_lambda.yaml --stack-name flask-source-ec2-lambda-${customstackid}-${environment} --capabilities CAPABILITY_NAMED_IAM
+sam deploy --template-file templates/resources.yaml --stack-name flask-copy-jsondata-to-dynamodb-${customstackid}-${environment} --parameter-overrides "customstackid=${customstackid} environment=${environment}" --capabilities CAPABILITY_NAMED_IAM
 
 
 

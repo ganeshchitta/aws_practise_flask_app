@@ -1,0 +1,25 @@
+  ApiGatewayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        !Sub flask-api-role-${customstackid}-${environment}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: ApiGatewayPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                  - "apigateway:*"
+                Resource:
+                  - !Sub arn:aws:lambda:ap-south-1:${AWS::AccountId}:function:flask-lambda-copy-to-dynamodb-${customstackid}-${environment}
+                  - "arn:aws:apigateway:*"

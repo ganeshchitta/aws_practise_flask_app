@@ -1,5 +1,5 @@
 Parameters:
-  custom_stack_id:
+  customstackid:
     Description: stack id of a user
     Type: String
     Default: "101"
@@ -9,160 +9,11 @@ Parameters:
     Default: "local"
 
 Resources:
-  ApiGatewayRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName:
-        Fn:Sub: flask-api-gateway-role-{custom_stack_id}-{environment}"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: apigateway.amazonaws.com
-            Action: sts:AssumeRole
-      Path: "/"
-      Policies:
-        - PolicyName: ApiGatewayPolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                  - "apigateway:*"
-                Resource:
-                  - !Sub arn:aws:lambda:ap-south-1:${AWS::AccountId}:function:copy-to-dynamodb
-                  - "arn:aws:apigateway:*"
-  FlaskApi:
-    Type: AWS::ApiGateway::RestApi
-    Properties:
-      Name:
-        Fn:Sub: flask-rest-api-{custom_stack_id}-{environment}"
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-  FlaskApiResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !GetAtt FlaskApi.RootResourceId
-      PathPart: flaskresource1
-      RestApiId: !Ref FlaskApi
-  FlaskApiResourceMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      HttpMethod: POST
-      ResourceId: !Ref FlaskApiResource
-      RestApiId: !Ref FlaskApi
-      AuthorizationType: NONE
-      Integration:
-        Type: AWS
-        IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/${FlaskLambdaApiToDynamodb.Arn}/invocations
-#       credentials: !GetAtt APIGatewayExecutionRole.Arn
-        IntegrationResponses:
-          - StatusCode: '200'
-            ResponseTemplates:
-              application/json: !Join
-                - ''
-                - - '{'
-                  - '"message": "Success"'
-                  - '}'
-            ResponseParameters:
-              method.response.header.Content-Type: "'application/json'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-          - StatusCode: '400'
-            SelectionPattern: '.*"statusCode":400.*'
-            ResponseTemplates:
-              application/json: !Join
-                - ''
-                - - '{'
-                  - '"message": "Bad Request"'
-                  - '}'
-            ResponseParameters:
-              method.response.header.Content-Type: "'application/json'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-      MethodResponses:
-        - StatusCode: '200'
-          ResponseModels:
-            application/json: 'Empty'
-          ResponseParameters:
-            method.response.header.Content-Type: true
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-        - StatusCode: '400'
-          ResponseModels:
-            application/json: 'Empty'
-          ResponseParameters:
-            method.response.header.Content-Type: true
-            method.response.header.Access-Control-Allow-Origin: "'*'"
-      RequestParameters:
-        method.request.header.Origin: true
-
-  FlaskApiGatewayResponse:
-    Type: AWS::ApiGateway::GatewayResponse
-    Properties:
-      ResponseType: DEFAULT_4XX
-      ResponseParameters:
-        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
-      RestApiId: !Ref FlaskApi
-  FlaskDynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        - AttributeName: sortkey
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-        - AttributeName: sortkey
-          KeyType: RANGE
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
-      TableName: 
-        Fn:Sub: flask-app-table-data-{custom_stack_id}-{environment}
-
-  FlaskLambdaApiToDynamodb:
-    # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: 
-          Fn:Sub: flask-sourcebucketflask-{custom_stack_id}-{environment}
-        S3Key: "flask-lambda-copy-to-dynamodb.zip"
-      FunctionName: 
-        Fn:Sub: flask-lambda-copy-to-dynamodb-{custom_stack_id}-{environment}
-      Handler: flask_lambda_copy_data_to_dynamodb.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - x86_64
-      Role: !GetAtt FlaskLambdaRoles.Arn
-      Layers:
-        - !Ref FlaskLambdaLayers
-      Environment:
-        Variables:
-          DYNAMODB_TABLE_NAME: !Ref FlaskDynamoDBTable
-
-  FlaskLambdaLayers:
-    Type: AWS::Lambda::LayerVersion
-    Properties:
-      Content:
-        S3Bucket: 
-          Fn:Sub: flask-sourcebucketflask-{custom_stack_id}-{environment}
-        S3Key: "flask-dependencies-lambda-layer.zip"
-      CompatibleRuntimes:
-        - python3.9
-      Description: 'My flask Layer1'
-      LayerName: 
-        Fn:Sub: flask-lambda-layer-{custom_stack_id}-{environment}
-
   FlaskLambdaRoles:
     Type: "AWS::IAM::Role"
     Properties:
-      RoleName: 
-        Fn:Sub: flask-lambda-execution-role-{custom_stack_id}-{environment}"
+      RoleName:
+        !Sub flask-lambda-role-${customstackid}-${environment}
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -189,23 +40,106 @@ Resources:
                   - "arn:aws:dynamodb:::*"
                   - "arn:aws:logs:*:*:*"
                   - "arn:aws:apigateway:*"
-  MyLambdaFunctionPermission:
-    Type: 'AWS::Lambda::Permission'
-    DependsOn:
-    - FlaskApi
-    - FlaskLambdaApiToDynamodb
+  FlaskDynamoDBTable:
+    Type: AWS::DynamoDB::Table
     Properties:
-      FunctionName: !Ref FlaskLambdaApiToDynamodb
-      Action: 'lambda:InvokeFunction'
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${FlaskApi}/*/POST/flaskresource1"
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: sortkey
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: sortkey
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: 
+        !Sub flask-app-table-data-${customstackid}-${environment}
+  MyApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name:
+        !Sub flask-api-lambda-trigger-${customstackid}-${environment}
+
+  MyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref MyApi
+      ParentId: !GetAtt MyApi.RootResourceId
+      PathPart: myresource
+
+  MyMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref MyApi
+      ResourceId: !Ref MyResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/${FlaskLambdaApiToDynamodb.Arn}/invocations
 
   MyDeployment:
     Type: AWS::ApiGateway::Deployment
+    DependsOn: MyMethod
     Properties:
-      RestApiId: !Ref FlaskApi
+      RestApiId: !Ref MyApi
+  MyStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
       StageName: dev
+      RestApiId: !Ref MyApi
+      DeploymentId: !Ref MyDeployment
 
-#Outputs:
-#  FlaskApiEndpoint:
-#    Value: !Sub "https://${FlaskApi}.execute-api.${AWS::Region}.amazonaws.com/dev/flask1"
+  FlaskLambdaApiToDynamodb:
+    # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: 
+          !Sub flask-sourcebucketflask-${customstackid}-${environment}
+        S3Key: "flask-lambda-copy-to-dynamodb.zip"
+      FunctionName: 
+        !Sub flask-lambda-copy-to-dynamodb-${customstackid}-${environment}
+      Handler: flask_lambda_copy_data_to_dynamodb.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Role: !GetAtt FlaskLambdaRoles.Arn
+      Layers:
+        - !Ref FlaskLambdaLayers
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: !Ref FlaskDynamoDBTable
+
+  FlaskLambdaLayers:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      Content:
+        S3Bucket: 
+          !Sub flask-sourcebucketflask-${customstackid}-${environment}
+        S3Key: "flask-dependencies-lambda-layer.zip"
+      CompatibleRuntimes:
+        - python3.9
+      Description: 'My flask Layer1'
+      LayerName: 
+        !Sub flask-lambda-layer-${customstackid}-${environment}
+
+  MyLambdaPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: FlaskLambdaApiToDynamodb
+    Properties:
+      FunctionName: !Sub flask-lambda-copy-to-dynamodb-${customstackid}-${environment}
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyApi}/*/*/*"
+
+
+Outputs:
+  ApiEndpoint:
+    Description: Endpoint URL of the deployed API
+    Value: !Sub "https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/dev"
