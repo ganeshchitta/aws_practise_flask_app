@@ -24,20 +24,27 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: "all-resource-access"
+        - PolicyName: "Dynamodb-put-access"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: "Allow"
                 Action:
-#                  - "logs:CreateLogGroup"
-#                  - "logs:CreateLogStream"
-#                  - "logs:PutLogEvents"
                   - "dynamodb:*"
                 Resource:
                    - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/flask-app-table-data-${customstackid}-${environment}
-#                  - "arn:aws:logs:*:*:*"
-#                  - "*"
+
+        - PolicyName: "Cloudwatch-logs-access"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource:
+                  - "*"
   FlaskDynamoDBTable:
     Type: AWS::DynamoDB::Table
     Properties:
