@@ -30,16 +30,14 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
-                  - "logs:CreateLogGroup"
-                  - "logs:CreateLogStream"
-                  - "logs:PutLogEvents"
+#                  - "logs:CreateLogGroup"
+#                  - "logs:CreateLogStream"
+#                  - "logs:PutLogEvents"
                   - "dynamodb:*"
-                  - "apigateway:*"
                 Resource:
-                  - "arn:aws:apigateway:::*"
-                  - "arn:aws:dynamodb:::*"
-                  - "arn:aws:logs:*:*:*"
-                  - "arn:aws:apigateway:*"
+                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/flask-app-table-data-${customstackid}-${environment}
+#                  - "arn:aws:logs:*:*:*"
+#                  - "*"
   FlaskDynamoDBTable:
     Type: AWS::DynamoDB::Table
     Properties:

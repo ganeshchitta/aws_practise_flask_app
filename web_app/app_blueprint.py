@@ -1,6 +1,6 @@
+import uuid
 from flask import Blueprint, request, render_template
 import requests
-
 app_blueprint = Blueprint('app_blueprint', __name__)
 
 
@@ -14,8 +14,8 @@ def index():
         print("Your name is " + first_name + last_name)
         json_data = {"first_name": first_name, "last_name": last_name}
         # post to call to an API
-        response = requests.post("https://gom9hfuyfa.execute-api.ap-south-1.amazonaws.com/dev/res1",#"https://pp2qfncgdk.execute-api.ap-south-1.amazonaws.com/dev/flaskresource1",
-                                 json={"body": json_data, "id":"7"})
+        response = requests.post("https://4mv3c88aeh.execute-api.ap-south-1.amazonaws.com/dev/myresource",
+                                 json={"body": json_data, "id": str(uuid.uuid4())})
         print("post call triggered")
 
         print(response)
