@@ -15,7 +15,7 @@ def index():
         json_data = {"first_name": first_name, "last_name": last_name}
         json_data["id"] = str(uuid.uuid4())
         # post to call to an API
-        response = requests.post("https://4mv3c88aeh.execute-api.ap-south-1.amazonaws.com/dev/myresource",
+        response = requests.post("https://3c7hu2gkqh.execute-api.ap-south-1.amazonaws.com/dev/myresource",
                                  json=json_data)
         print("post call triggered")
 

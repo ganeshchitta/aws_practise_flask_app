@@ -10,7 +10,7 @@ table = dynamodb.Table(table_name)
 
 def lambda_handler(event, context):
     print("event=============", event)
-    data = json.loads(event['body'])["body"]
+    data = json.loads(event['body'])
     # data["id"] = event["id"]
     timestamp = int(time.time() * 1000)  # current timestamp in milliseconds
     data["sortkey"] = str(timestamp)

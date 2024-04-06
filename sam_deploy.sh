@@ -25,8 +25,8 @@ done
 
 
 environment=$(jq -r '.environment' sam_deploy_parameters.json)
-customstackid=$(jq -r '.Parameteroverrides.CustomStackId' sam_deploy_parameters.json)
-custom_domain_id=$(jq -r '.Parameteroverrides.CustomDomainId' sam_deploy_parameters.json)
+customstackid=$(jq -r '.ParameterOverrides.CustomStackId' sam_deploy_parameters.json)
+custom_domain_id=$(jq -r '.ParameterOverrides.CustomDomainId' sam_deploy_parameters.json)
 ## zip a lambda file
 cd resources
 if [ $lambdas -eq 1 ]; then
@@ -39,11 +39,11 @@ python lambdas/zip_given_lambda.py
 ## upload lambda python code to s3
 aws s3 cp lambdas/flask-lambda-copy-to-dynamodb.zip   s3://flask-sourcebucketflask-${customstackid}-${environment}/
 ## upload dependencies as layers to s3
-#aws s3 cp dependencies.zip s3://flask-sourcebucketflask-${customstackid}-${environment}/
+aws s3 cp dependencies.zip s3://flask-sourcebucketflask-${customstackid}-${environment}/
 aws s3 cp lambdas/flask-dependencies-lambda-layer.zip s3://flask-sourcebucketflask-${customstackid}-${environment}/
 
 if [ $lambdas -eq 1 ]; then
-#sam deploy --template-file templates/ec2_lambda.yaml --stack-name flask-source-ec2-lambda-${customstackid}-${environment} --capabilities CAPABILITY_NAMED_IAM
+#sam deploy --template-file templates/ec2_lambda.yaml --stack-name flask-ec2-instance-${customstackid}-${environment} --parameter-overrides "customstackid=${customstackid} environment=${environment} Keyname=ec2-${customstackid}-${environment} InstanceType=t2.micro" --capabilities CAPABILITY_NAMED_IAM
 sam deploy --template-file templates/resources.yaml --stack-name flask-copy-jsondata-to-dynamodb-${customstackid}-${environment} --parameter-overrides "customstackid=${customstackid} environment=${environment}" --capabilities CAPABILITY_NAMED_IAM
 fi
 
